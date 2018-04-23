@@ -1,0 +1,45 @@
+variables:
+  MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+.alpine: &alpine
+  image: python:3.6-alpine3.7
+  before_script:
+    - apk add --update build-base git libffi-dev libmemcached-dev jpeg-dev zlib-dev
+
+.ubuntu: &ubuntu
+  image: ubuntu:18.04
+  before_script:
+    - apt update -qq && apt install -qq -y git python3 python3-pip libmemcached-dev zlib1g-dev
+    - ln -s /usr/bin/python3 /usr/bin/python
+    - alias pip=pip3
+
+.runtests: &runtests
+  script:
+    - cd tests
+    - pip install -e ..
+    - pip install -r requirements/py3.txt
+    - ./runtests.py
+
+runtests-alpine-py36-mysql80:
+  services:
+    - mysql:8.0
+  <<: *alpine
+  <<: *runtests
+
+runtests-alpine-py36-mysql57:
+  services:
+    - mysql:5.7
+  <<: *alpine
+  <<: *runtests
+
+runtests-bionic-py36-mysql80:
+  services:
+    - mysql:8.0
+  <<: *ubuntu
+  <<: *runtests
+
+runtests-bionic-py36-mysql57:
+  services:
+    - mysql:5.7
+  <<: *ubuntu
+  <<: *runtests
